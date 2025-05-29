@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import java.util.Set;
 
 import static com.codegym.jira.bugtracking.ObjectType.TASK;
 import static com.codegym.jira.bugtracking.task.TaskController.REST_URL;
@@ -44,6 +45,8 @@ class TaskControllerTest extends AbstractControllerTest {
     private ActivityRepository activityRepository;
     @Autowired
     private UserBelongRepository userBelongRepository;
+    @Autowired
+    private TaskService taskService;
 
     @Test
     @WithUserDetails(value = UserTestData.USER_MAIL)
@@ -588,5 +591,72 @@ class TaskControllerTest extends AbstractControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.detail", is(String
                         .format("Not found assignment with userType=%s for task {%d} for user {%d}", TASK_DEVELOPER, TASK1_ID, UserTestData.ADMIN_ID))));
+    }
+
+    @Test
+    @WithUserDetails(value = UserTestData.USER_MAIL)
+    void getTags() throws Exception {
+        perform(MockMvcRequestBuilders.get(TASKS_REST_URL_SLASH + TASK1_ID + "/tags"))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    @WithUserDetails(value = UserTestData.USER_MAIL)
+    void addTag() throws Exception {
+        perform(MockMvcRequestBuilders.patch(TASKS_REST_URL_SLASH + TASK1_ID + "/tags")
+                .param("tag", "important"))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        Set<String> tags = taskService.getTags(TASK1_ID);
+        assertTrue(tags.contains("important"));
+    }
+
+    @Test
+    @WithUserDetails(value = UserTestData.USER_MAIL)
+    void addInvalidTag() throws Exception {
+        perform(MockMvcRequestBuilders.patch(TASKS_REST_URL_SLASH + TASK1_ID + "/tags")
+                .param("tag", "a"))
+                .andDo(print())
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    @WithUserDetails(value = UserTestData.USER_MAIL)
+    void removeTag() throws Exception {
+        // First add a tag
+        taskService.addTag(TASK1_ID, "important");
+
+        perform(MockMvcRequestBuilders.delete(TASKS_REST_URL_SLASH + TASK1_ID + "/tags")
+                .param("tag", "important"))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        Set<String> tags = taskService.getTags(TASK1_ID);
+        assertFalse(tags.contains("important"));
+    }
+
+    @Test
+    @WithUserDetails(value = UserTestData.USER_MAIL)
+    void removeNonExistentTag() throws Exception {
+        perform(MockMvcRequestBuilders.delete(TASKS_REST_URL_SLASH + TASK1_ID + "/tags")
+                .param("tag", "nonexistent"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getTagsUnauthorized() throws Exception {
+        perform(MockMvcRequestBuilders.get(TASKS_REST_URL_SLASH + TASK1_ID + "/tags"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void addTagUnauthorized() throws Exception {
+        perform(MockMvcRequestBuilders.patch(TASKS_REST_URL_SLASH + TASK1_ID + "/tags")
+                .param("tag", "important"))
+                .andExpect(status().isUnauthorized());
     }
 }

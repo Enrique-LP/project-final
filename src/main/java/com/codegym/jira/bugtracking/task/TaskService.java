@@ -7,6 +7,7 @@ import com.codegym.jira.bugtracking.UserBelongRepository;
 import com.codegym.jira.bugtracking.task.mapper.TaskExtMapper;
 import com.codegym.jira.bugtracking.task.mapper.TaskFullMapper;
 import com.codegym.jira.common.error.DataConflictException;
+import com.codegym.jira.common.error.IllegalRequestDataException;
 import com.codegym.jira.common.error.NotFoundException;
 import com.codegym.jira.common.util.Util;
 import com.codegym.jira.login.AuthUser;
@@ -23,6 +24,7 @@ import org.springframework.util.Assert;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -136,5 +138,27 @@ public class TaskService {
         if (!userType.equals(possibleUserType)) {
             throw new DataConflictException(String.format(assign ? CANNOT_ASSIGN : CANNOT_UN_ASSIGN, userType, task.getStatusCode()));
         }
+    }
+
+    @Transactional
+    public void addTag(long taskId, String tag) {
+        Task task = handler.getRepository().getExisted(taskId);
+        if (tag == null || tag.length() < 2 || tag.length() > 32) {
+            throw new IllegalRequestDataException("Tag length must be between 2 and 32 characters");
+        }
+        task.getTags().add(tag);
+    }
+
+    @Transactional
+    public void removeTag(long taskId, String tag) {
+        Task task = handler.getRepository().getExisted(taskId);
+        if (!task.getTags().remove(tag)) {
+            throw new NotFoundException("Tag '" + tag + "' not found for task " + taskId);
+        }
+    }
+
+    public Set<String> getTags(long taskId) {
+        Task task = handler.getRepository().getExisted(taskId);
+        return Set.copyOf(task.getTags());
     }
 }
