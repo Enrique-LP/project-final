@@ -23,18 +23,6 @@ public interface TaskRepository extends BaseRepository<Task> {
     Optional<Task> findFullById(long id);
 
     @Modifying
-    @Query(value = """
-            WITH RECURSIVE task_with_subtasks AS (
-                SELECT id, id AS child
-                FROM task
-                WHERE parent_id is null AND id =:taskId
-                UNION ALL
-                    SELECT task_with_subtasks.id, t.id
-                    FROM task_with_subtasks JOIN task t ON t.parent_id = task_with_subtasks.child
-            )
-            UPDATE task
-            SET sprint_id =:sprintId
-            WHERE id IN (SELECT child FROM task_with_subtasks)
-            """, nativeQuery = true)
+    @Query("UPDATE Task t SET t.sprintId = :sprintId WHERE t.id = :taskId OR t.parentId = :taskId")
     void setTaskAndSubTasksSprint(long taskId, Long sprintId);
 }
