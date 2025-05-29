@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <th:block th:fragment="page"
-          th:with="img=${img}?: 'https://codegym.cc/assets/images/site/homepage/og-image-cg.jpg', descr=${descr}?: ${title}">
+          th:with="img = (${img} ?: 'https://codegym.cc/assets/images/site/homepage/og-image-cg.jpg'), descr = (${descr} ?: ${title})">
     <head>
         <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
         <meta content="width=device-width, initial-scale=1" name="viewport">
@@ -17,7 +17,7 @@
         <link href="/static/css/main.css?v=1" rel="stylesheet"/>
         <link href="/static/datatables/css/dataTables.bootstrap5.min.css" rel="stylesheet"/>
         <link href="/static/noty/css/noty.css" rel="stylesheet"/>
-        <link href="/static/bootstrap/css/bootstrap-select.min.css" rel="stylesheet"/>
+       <link href="/static/bootstrap/css/bootstrap-select.min.css" rel="stylesheet"/>--
         <link href="/static/jquery/css/ui.fancytree.css" rel="stylesheet"/>
 
         <link rel="image_src" th:href="${img}"/>
@@ -63,7 +63,10 @@
     </body>
     <script src="/static/jquery/js/jquery.min.js"></script>
     <script>
-        $([[${activeMenuItem}]]).addClass('active');
+        var menuItemSelector = /*[[${activeMenuItem}]]*/ '';
+        if (menuItemSelector) {
+            $(menuItemSelector).addClass('active');
+        }
     </script>
     <script defer src="/static/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script defer src="/static/datatables/js/jquery.dataTables.min.js"></script>
