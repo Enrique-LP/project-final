@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -160,5 +161,59 @@ public class TaskService {
     public Set<String> getTags(long taskId) {
         Task task = handler.getRepository().getExisted(taskId);
         return Set.copyOf(task.getTags());
+    }
+
+    /**
+     * Calcula el tiempo que la tarea estuvo en desarrollo (desde in_progress hasta ready_for_review)
+     * @param taskId ID de la tarea
+     * @return Duration tiempo transcurrido
+     */
+    public Duration getDevTime(long taskId) {
+        List<Activity> activities = activityHandler.getRepository().findAllByTaskIdOrderByUpdatedDesc(taskId);
+        
+        LocalDateTime startDev = activities.stream()
+            .filter(a -> "in_progress".equals(a.getStatusCode()))
+            .map(Activity::getUpdated)
+            .min(LocalDateTime::compareTo)
+            .orElse(null);
+            
+        LocalDateTime endDev = activities.stream()
+            .filter(a -> "ready_for_review".equals(a.getStatusCode()))
+            .map(Activity::getUpdated)
+            .min(LocalDateTime::compareTo)
+            .orElse(null);
+            
+        if (startDev == null || endDev == null) {
+            return Duration.ZERO;
+        }
+        
+        return Duration.between(startDev, endDev);
+    }
+
+    /**
+     * Calcula el tiempo que la tarea estuvo en pruebas (desde ready_for_review hasta done)
+     * @param taskId ID de la tarea
+     * @return Duration tiempo transcurrido
+     */
+    public Duration getTestTime(long taskId) {
+        List<Activity> activities = activityHandler.getRepository().findAllByTaskIdOrderByUpdatedDesc(taskId);
+        
+        LocalDateTime startTest = activities.stream()
+            .filter(a -> "ready_for_review".equals(a.getStatusCode()))
+            .map(Activity::getUpdated)
+            .min(LocalDateTime::compareTo)
+            .orElse(null);
+            
+        LocalDateTime endTest = activities.stream()
+            .filter(a -> "done".equals(a.getStatusCode()))
+            .map(Activity::getUpdated)
+            .min(LocalDateTime::compareTo)
+            .orElse(null);
+            
+        if (startTest == null || endTest == null) {
+            return Duration.ZERO;
+        }
+        
+        return Duration.between(startTest, endTest);
     }
 }

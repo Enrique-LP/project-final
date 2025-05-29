@@ -87,6 +87,16 @@ values (1, 1, '2023-05-15 09:05:10', null, 'Data', null, 3, 'epic', 'in_progress
        (1, 1, '2023-05-15 14:05:10', null, 'Data', null, 4, null, null, null),
        (1, 2, '2023-05-15 12:05:10', null, 'Trees', 'Trees desc', 4, 'epic', 'in_progress', 'normal');
 
+-- Registros para tracking de tiempos de tarea
+INSERT INTO ACTIVITY (ID, AUTHOR_ID, TASK_ID, UPDATED, STATUS_CODE) 
+VALUES (1000, 1, 1, '2025-05-20 10:00:00', 'in_progress');
+
+INSERT INTO ACTIVITY (ID, AUTHOR_ID, TASK_ID, UPDATED, STATUS_CODE) 
+VALUES (1001, 1, 1, '2025-05-21 15:30:00', 'ready_for_review');
+
+INSERT INTO ACTIVITY (ID, AUTHOR_ID, TASK_ID, UPDATED, STATUS_CODE) 
+VALUES (1002, 1, 1, '2025-05-22 11:45:00', 'done');
+
 insert into USER_BELONG (OBJECT_ID, OBJECT_TYPE, USER_ID, USER_TYPE_CODE, STARTPOINT, ENDPOINT)
 values (1, 2, 2, 'task_developer', '2023-06-14 08:35:10', '2023-06-14 08:55:00'),
        (1, 2, 2, 'task_reviewer', '2023-06-14 09:35:10', null),
